@@ -13,9 +13,10 @@ item_cols = ['movieID', 'movie_title', 'release_date', 'video_release_date','IMD
 user_cols = ['userID', 'age', 'gender', 'occupation', 'zip_code']
 
 # importing the data files onto dataframes
-users = pd.read_csv('./ml-100k/u.user', sep='|', names=user_cols, encoding='latin-1')
-item = pd.read_csv('./ml-100k/u.item', sep='|', names=item_cols, encoding='latin-1')
 data = pd.read_csv('./ml-100k/u.data', sep='\t', names=data_cols, encoding='latin-1')
+item = pd.read_csv('./ml-100k/u.item', sep='|', names=item_cols, encoding='latin-1')
+users = pd.read_csv('./ml-100k/u.user', sep='|', names=user_cols, encoding='latin-1')
+
 
 # merging 3 data sets
 dataset = pd.merge(pd.merge(item, data), users)
@@ -32,16 +33,22 @@ print(train_data.shape)
 print(test_data.shape)
 
 train_data_matrix = np.zeros((n_users, n_movies))
-for line in data.itertuples():
+for line in train_data.itertuples():
     # print(line)
     train_data_matrix[line[1]-1, line[2]-1] = line[3]
+    # -1 bcoz there is no user or movie with id 0
+
+test_data_matrix = np.zeros((n_users, n_movies))
+for line in test_data.itertuples():
+    # print(line)
+    test_data_matrix[line[1]-1, line[2]-1] = line[3]
     # -1 bcoz there is no user or movie with id 0
 
 # print(train_data_matrix)
 # using pairwise distance from from sklearn
 user_similarity = pairwise_distances(train_data_matrix, metric='cosine')
 movie_similarity = pairwise_distances(train_data_matrix.T, metric='cosine')
-print(user_similarity)
+# print(user_similarity)
 user_similarity_crr = pairwise_distances(train_data_matrix, metric='correlation')
 movie_similarity_crr = pairwise_distances(train_data_matrix.T, metric='correlation')
 
@@ -65,12 +72,13 @@ def predict ( ratings, similarity, type='user' ):
 movie_prediction = predict (train_data_matrix, movie_similarity, type='item')
 user_prediction = predict(train_data_matrix, user_similarity, type='user')
 
-movie_prediction_crr = predict(train_data_matrix, movie_similarity_crr, type='item')
-user_prediction_crr = predict(train_data_matrix, user_similarity_crr, type='user')
+ # todo ----> nan matrix for item based
+ #  movie_prediction_crr = predict(train_data_matrix, movie_similarity_crr, type='item')
+ #  user_prediction_crr = predict(train_data_matrix, user_similarity_crr, type='user')
 
-print(movie_prediction[ :6])
-#print(user_prediction)
-print(movie_prediction_crr[ :6])
+# print(movie_prediction[ :2])
+# print(user_prediction)
+# print(movie_prediction_crr[ :2])
 
 
 def rmse(prediction, ground_truth):
@@ -78,14 +86,14 @@ def rmse(prediction, ground_truth):
     ground_truth = ground_truth[ground_truth.nonzero()].flatten()
     return sqrt(mean_squared_error(prediction, ground_truth))
 
-print ('User-based CF RMSE: ' + str(rmse(user_prediction, train_data_matrix)))
-print ('Item-based CF RMSE: ' + str(rmse(movie_prediction, train_data_matrix)))
+print ('User-based CF RMSE: ' + str(rmse(user_prediction, test_data_matrix)))
+print ('Item-based CF RMSE: ' + str(rmse(movie_prediction, test_data_matrix)))
 
-print ('User-based CF RMSE: ' + str(rmse(user_prediction_crr, train_data_matrix)))
-print ('Item-based CF RMSE: ' + str(rmse(movie_prediction_crr, train_data_matrix)))
+#  print ('User-based CF RMSE: ' + str(rmse(user_prediction_crr, test_data_matrix)))
+#  print ('Item-based CF RMSE: ' + str(rmse(movie_prediction_crr, test_data_matrix)))
 
 
-
+''' 
 def predict_topk(ratings, similarity, kind='user', k=40):
     pred = np.zeros(ratings.shape)
     if kind == 'user':
@@ -108,7 +116,7 @@ print ('Top-k User-based CF MSE: ' + str(rmse(pred, test)))
 
 pred = predict_topk(train, item_similarity, kind='item', k=40)
 print ('Top-k Item-based CF MSE: ' + str(rmse(pred, test)))
-
+ '''
 
 
 ''' def pearson_correlation(user1, user2):
