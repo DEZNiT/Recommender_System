@@ -100,6 +100,7 @@ def predict_topk(ratings, similarity, kind='user', k=40):
     pred = np.zeros(ratings.shape)
     if kind == 'user':
         for i in range(ratings.shape[0]):
+            # [:total no of elements required*-1 : -1 for descending order]
             top_k_users = [np.argsort(similarity[:,i])[:-k-1:-1]]
             for j in range(ratings.shape[1]):
                 pred[i, j] = similarity[i, :][top_k_users].dot(ratings[:, j][top_k_users]) 
