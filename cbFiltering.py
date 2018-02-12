@@ -46,10 +46,11 @@ for line in test_data.itertuples():
 
 # print(train_data_matrix)
 # using pairwise distance from from sklearn
-user_similarity = pairwise_distances(train_data_matrix, metric='cosine')
-movie_similarity = pairwise_distances(train_data_matrix.T, metric='cosine')
+user_similarity = 1 - pairwise_distances(train_data_matrix, metric='cosine')
+movie_similarity = 1 - pairwise_distances(train_data_matrix.T, metric='cosine')
 # print(user_similarity)
-user_similarity_crr = pairwise_distances(train_data_matrix, metric='correlation')
+print(movie_similarity)
+user_similarity_crr =1 - pairwise_distances(train_data_matrix, metric='correlation')
 # movie_similarity_crr = pairwise_distances(train_data_matrix.T, metric='correlation')
 
 movie_similarity_crr = 1 - pairwise_distances(train_data_matrix.T, metric='correlation')
@@ -113,11 +114,12 @@ def predict_topk(ratings, similarity, kind='user', k=40):
                 pred[i, j] /= np.sum(np.abs(similarity[j, :][top_k_items]))        
     
     return pred
-
+'''
 pred = predict_topk(train_data_matrix, user_similarity, kind='user', k=40)
 print ('Top-k User-based CF RMSE: ' + str(rmse(pred, test_data_matrix)))
-
+'''
 pred = predict_topk(train_data_matrix, movie_similarity, kind='item', k=40)
+# print(pred)
 print ('Top-k Item-based CF RMSE: ' + str(rmse(pred, test_data_matrix)))
 
 
@@ -131,8 +133,8 @@ with open('./ml-100k/u.item', 'r') as f:
 def top_k_movies(similarity, mapper, movie_idx, k=6):
     return [mapper[x] for x in np.argsort(similarity[movie_idx,:])[:-k-1:-1]]
 
-idx = 10 # sevens
-movies = top_k_movies(movie_similarity_crr, idx_to_movie, idx)
+idx = 0 # sevens
+movies = top_k_movies(pred, idx_to_movie, idx)
 # posters = tuple(Image(url=get_poster(movie, base_url)) for movie in movies)
 print(movies[:])
 
