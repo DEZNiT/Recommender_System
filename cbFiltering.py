@@ -50,7 +50,10 @@ user_similarity = pairwise_distances(train_data_matrix, metric='cosine')
 movie_similarity = pairwise_distances(train_data_matrix.T, metric='cosine')
 # print(user_similarity)
 user_similarity_crr = pairwise_distances(train_data_matrix, metric='correlation')
-movie_similarity_crr = pairwise_distances(train_data_matrix.T, metric='correlation')
+# movie_similarity_crr = pairwise_distances(train_data_matrix.T, metric='correlation')
+
+movie_similarity_crr = 1 - pairwise_distances(train_data_matrix.T, metric='correlation')
+movie_similarity_crr[np.isnan(movie_similarity_crr)] = 0
 
 def predict ( ratings, similarity, type='user' ):
 
@@ -72,9 +75,9 @@ def predict ( ratings, similarity, type='user' ):
 movie_prediction = predict (train_data_matrix, movie_similarity, type='item')
 user_prediction = predict(train_data_matrix, user_similarity, type='user')
 
- # todo ----> nan matrix for item based
- #  movie_prediction_crr = predict(train_data_matrix, movie_similarity_crr, type='item')
- #  user_prediction_crr = predict(train_data_matrix, user_similarity_crr, type='user')
+
+movie_prediction_crr = predict(train_data_matrix, movie_similarity_crr, type='item')
+user_prediction_crr = predict(train_data_matrix, user_similarity_crr, type='user')
 
 # print(movie_prediction[ :2])
 # print(user_prediction)
@@ -89,17 +92,16 @@ def rmse(prediction, ground_truth):
 print ('User-based CF RMSE: ' + str(rmse(user_prediction, test_data_matrix)))
 print ('Item-based CF RMSE: ' + str(rmse(movie_prediction, test_data_matrix)))
 
-#  print ('User-based CF RMSE: ' + str(rmse(user_prediction_crr, test_data_matrix)))
-#  print ('Item-based CF RMSE: ' + str(rmse(movie_prediction_crr, test_data_matrix)))
+print ('User-based CRR CF RMSE: ' + str(rmse(user_prediction_crr, test_data_matrix)))
+print ('Item-based CRR CF RMSE: ' + str(rmse(movie_prediction_crr, test_data_matrix)))
 
 
-''' 
 def predict_topk(ratings, similarity, kind='user', k=40):
     pred = np.zeros(ratings.shape)
     if kind == 'user':
         for i in range(ratings.shape[0]):
             top_k_users = [np.argsort(similarity[:,i])[:-k-1:-1]]
-            for j in xrange(ratings.shape[1]):
+            for j in range(ratings.shape[1]):
                 pred[i, j] = similarity[i, :][top_k_users].dot(ratings[:, j][top_k_users]) 
                 pred[i, j] /= np.sum(np.abs(similarity[i, :][top_k_users]))
     if kind == 'item':
@@ -111,12 +113,42 @@ def predict_topk(ratings, similarity, kind='user', k=40):
     
     return pred
 
-pred = predict_topk(train, user_similarity, kind='user', k=40)
-print ('Top-k User-based CF MSE: ' + str(rmse(pred, test)))
+pred = predict_topk(train_data_matrix, user_similarity, kind='user', k=40)
+print ('Top-k User-based CF RMSE: ' + str(rmse(pred, test_data_matrix)))
 
-pred = predict_topk(train, item_similarity, kind='item', k=40)
-print ('Top-k Item-based CF MSE: ' + str(rmse(pred, test)))
- '''
+pred = predict_topk(train_data_matrix, movie_similarity, kind='item', k=40)
+print ('Top-k Item-based CF RMSE: ' + str(rmse(pred, test_data_matrix)))
+
+
+ # item 
+idx_to_movie = {}
+with open('./ml-100k/u.item', 'r') as f:
+    for line in f.readlines():
+        info = line.split('|')
+        idx_to_movie[int(info[0])-1] = info[1]
+
+def top_k_movies(similarity, mapper, movie_idx, k=6):
+    return [mapper[x] for x in np.argsort(similarity[movie_idx,:])[:-k-1:-1]]
+
+idx = 10 # sevens
+movies = top_k_movies(movie_similarity_crr, idx_to_movie, idx)
+# posters = tuple(Image(url=get_poster(movie, base_url)) for movie in movies)
+print(movies[:])
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 ''' def pearson_correlation(user1, user2):
