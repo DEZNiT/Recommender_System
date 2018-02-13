@@ -26,6 +26,9 @@ n_movies = data.movieID.unique().shape[0]
 
 print(n_users, n_movies)
 
+R_df = data.pivot(index = 'userID', columns ='movieID', values = 'rating').fillna(0)
+print(R_df.head())
+
 # splitting data to testing and training data
 train_data, test_data = train_test_split(data, test_size=0.33, random_state=42)
 
@@ -116,10 +119,15 @@ def predict_topk(ratings, similarity, kind='user', k=40):
     return pred
 '''
 pred = predict_topk(train_data_matrix, user_similarity, kind='user', k=40)
+print("user_pred")
+print(pred)
+print(pred.shape)
 print ('Top-k User-based CF RMSE: ' + str(rmse(pred, test_data_matrix)))
 '''
 pred = predict_topk(train_data_matrix, movie_similarity, kind='item', k=40)
-# print(pred)
+print("item pred")
+print(pred)
+print(pred.shape)
 print ('Top-k Item-based CF RMSE: ' + str(rmse(pred, test_data_matrix)))
 
 
@@ -130,18 +138,13 @@ with open('./ml-100k/u.item', 'r') as f:
         info = line.split('|')
         idx_to_movie[int(info[0])-1] = info[1]
 
-def top_k_movies(similarity, mapper, movie_idx, k=6):
+def top_k_movies(similarity, mapper, movie_idx, k=10):
     return [mapper[x] for x in np.argsort(similarity[movie_idx,:])[:-k-1:-1]]
 
-idx = 0 # sevens
+idx = 12 # sevens
 movies = top_k_movies(pred, idx_to_movie, idx)
 # posters = tuple(Image(url=get_poster(movie, base_url)) for movie in movies)
 print(movies[:])
-
-
-
-
-
 
 
 
